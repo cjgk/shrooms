@@ -1,0 +1,215 @@
+<html>
+
+    <head>
+
+         <script src="easeljs-0.8.0.min.js"></script>
+         <script src="preloadjs-0.6.0.min.js"></script>
+    </head>
+
+    <body onload="init();">
+
+        <canvas id="shroomvas" width="500" height="300"></canvas> 
+
+        <script>
+            var stage, w, h, loader, rotation;
+            var landscape, stick;
+            var shrooms, shroom, actionShroom, actionBoard;
+            var points, lives, pointsLabel, livesLabel, speed;
+
+            function init() {
+                lives = 3;
+                points = 0;
+
+                loader = new createjs.LoadQueue(false);
+                stage = new createjs.Stage("shroomvas");
+                w = stage.canvas.width;
+                h = stage.canvas.height;
+
+                manifest = [
+                    {src: "landscape.png", id: "landscape"},
+                    {src: "stick.png", id: "stick"},
+                    {src: "shroom1.png", id: "shroom1"},
+                    {src: "shroom2.png", id: "shroom2"},
+                    {src: "shroom3.png", id: "shroom3"},
+                    {src: "trashcan.png", id: "trashcan"},
+                    {src: "cauldron.png", id: "cauldron"},
+                    
+                ];
+
+                loader.addEventListener("complete", handleComplete); 
+                loader.loadManifest(manifest, true, "resources/");
+            }
+
+            function handleComplete() {
+
+                rotation = 0;
+
+                // Set up the background
+                var landscapeImg = loader.getResult("landscape");
+                landscape = new createjs.Shape();
+                landscape.graphics.beginBitmapFill(landscapeImg).drawRect(0, 0, w+landscapeImg.width, h+landscapeImg.height);
+                landscape.tileW = landscapeImg.width;
+                landscape.y = h - landscapeImg.height;
+
+                pointsLabel = new createjs.Text(points, "20px Arial", "#ff7700");
+                pointsLabel.x = 20;
+                pointsLabel.y = 20;
+
+                livesLabel = new createjs.Text(lives, "20px Arial", "#ff7700");
+                livesLabel.x = 20;
+                livesLabel.y = 45;
+
+                speed = 150;
+
+                // Set up the runner
+                var stickImg = loader.getResult("stick");
+                var stickSpriteSheet = new createjs.SpriteSheet({
+                    framerate: 10,
+                    images: [stickImg],
+                    frames: {width: 32, height: 64, regX: -30, regY: -155},
+                    animations: {
+                        run: [19, 26]
+                    }
+                });
+                stick = new createjs.Sprite(stickSpriteSheet, "run");
+
+                // Set up shrooms
+                var shroom1 = {
+                    bitmap: new createjs.Bitmap(loader.getResult("shroom1")),
+                    y: 176,
+                    edible: true
+                };
+
+                var shroom2 = {
+                    bitmap: new createjs.Bitmap(loader.getResult("shroom2")),
+                    y: 185,
+                    edible: false
+                };
+
+                var shroom3 = {
+                    bitmap: new createjs.Bitmap(loader.getResult("shroom3")),
+                    y: 170,
+                    edible: true
+                };
+
+                shrooms = [shroom1, shroom2, shroom3];
+
+                // Set up action board
+                var actionBoardBg = new createjs.Shape();
+                actionBoardBg.graphics.beginFill("#eee")
+                    .setStrokeStyle(1)
+                    .beginStroke("#000000")
+                    .drawRoundRect(280, 20, 200, 100, 10);
+
+                var trashcan = new createjs.Bitmap(loader.getResult("trashcan"));
+                trashcan.x = 410;
+                trashcan.y = 20;
+                trashcan.on("click", trashcanHandler);
+
+                var cauldron = new createjs.Bitmap(loader.getResult("cauldron"));
+                cauldron.x = 410;
+                cauldron.y = 50;
+                cauldron.on("click", cauldronHandler);
+
+                actionBoard = new createjs.Container();
+                actionBoard.name = "actionBoard";
+                actionBoard.addChild(actionBoardBg, trashcan, cauldron);
+
+                // Set up basic game
+                stage.addChild(landscape, stick, pointsLabel, livesLabel);
+
+                createjs.Ticker.timingMode = createjs.Ticker.RAF;
+                createjs.Ticker.addEventListener("tick", tick);
+                //tick(tick)
+                //tick(tick)
+            }
+
+            function tick(event) {
+                var deltaS = event.delta / 1000;
+
+                landscape.x = (landscape.x - deltaS * speed) % landscape.tileW;
+
+                if (shroom != undefined) {
+                    if (shroom.bitmap.x < 55) {
+                        actionShroom = shroom;
+                        showActionBoard(actionShroom);
+                        stage.removeChild(shroom.bitmap);
+                        shroom = undefined;
+                    } else {
+                        shroom.bitmap.x = (shroom.bitmap.x - deltaS * speed);
+                    }
+
+                    if (stage.getChildByName("actionBoard") && shroom && shroom.bitmap.x < 300) {
+                        hideActionBoard();
+                    }
+                }
+
+                if (rotation % 200 == 0) {
+                    randShroom = Math.floor(Math.random() * shrooms.length);
+                    shroom = shrooms[randShroom];
+                    addShroom(shroom);
+                }
+
+                if (rotation % 1000 == 0) {
+                    speed += 10;
+                }
+
+                if (lives == 0) {
+                    event.paused = true;
+                }
+
+                rotation = rotation + 1;
+                if (!event.paused) {
+                    stage.update(event);
+                } else {
+                }
+            }
+
+            function showActionBoard (actionShroom) {
+                actionBitmap = actionShroom.bitmap.clone();
+                actionBitmap.name = "actionShroom";
+                actionBitmap.x = 300;
+                actionBitmap.y = 40;
+                actionBoard.addChild(actionBitmap);
+
+                stage.addChild(actionBoard);
+            }
+
+            function hideActionBoard () {
+                var actionShroom = actionBoard.getChildByName("actionShroom");
+                actionBoard.removeChild(actionShroom, actionBoard);
+                stage.removeChild(actionBoard);
+
+            }
+            
+            function addShroom (shroom) {
+                shroom.bitmap.x = 550;
+                shroom.bitmap.y = shroom.y;
+                stage.addChild(shroom.bitmap);
+            }
+
+            function cauldronHandler(evt, data) {
+                hideActionBoard();
+                if (actionShroom.edible) {
+                    points = points + 10;
+                } else {
+                    lives = lives - 1;
+                }
+
+                pointsLabel.text = points;
+                livesLabel.text = lives;
+            }
+
+            function trashcanHandler(evt, data) {
+                hideActionBoard();
+                if (actionShroom.edible) {
+                    points = points - 5;
+                } else {
+                    points = points + 5;
+                }
+
+                pointsLabel.text = points;
+            }
+        </script>
+    </body>
+</html>
