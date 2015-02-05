@@ -12,7 +12,7 @@
 
         <script>
             var stage, w, h, loader, rotation;
-            var background, stick;
+            var background, hipster;
             var shrooms, shroom, actionShroom, actionBoard;
             var points, lives, pointsLabel, livesLabel, speed;
 
@@ -27,10 +27,9 @@
 
                 manifest = [
                     {src: "background.png", id: "background"},
-                    {src: "stick.png", id: "stick"},
-                    {src: "shroom1.png", id: "shroom1"},
-                    {src: "shroom2.png", id: "shroom2"},
-                    {src: "shroom3.png", id: "shroom3"},
+                    {src: "spritesheet-hipster.png", id: "hipster"},
+                    {src: "chantarelle.png", id: "chantarelle"},
+                    {src: "deathcap.png", id: "deathcap"},
                     {src: "trashcan.png", id: "trashcan"},
                     {src: "cauldron.png", id: "cauldron"},
                     
@@ -61,38 +60,31 @@
 
                 speed = 150;
 
-                // Set up the runner
-                var stickImg = loader.getResult("stick");
-                var stickSpriteSheet = new createjs.SpriteSheet({
+                // Set up the hipster
+                var hipsterImg = loader.getResult("hipster");
+                var hipsterSpriteSheet = new createjs.SpriteSheet({
                     framerate: 10,
-                    images: [stickImg],
-                    frames: {width: 32, height: 64, regX: -30, regY: -155},
+                    images: [hipsterImg],
+                    frames: {width: 98, height: 120, regX: -50, regY: -280},
                     animations: {
-                        run: [19, 26]
+                        run: [0, 9]
                     }
                 });
-                stick = new createjs.Sprite(stickSpriteSheet, "run");
+                hipster = new createjs.Sprite(hipsterSpriteSheet, "run");
 
                 // Set up shrooms
-                var shroom1 = {
-                    bitmap: new createjs.Bitmap(loader.getResult("shroom1")),
-                    y: 176,
-                    edible: true
-                };
-
-                var shroom2 = {
-                    bitmap: new createjs.Bitmap(loader.getResult("shroom2")),
-                    y: 185,
-                    edible: false
-                };
-
-                var shroom3 = {
-                    bitmap: new createjs.Bitmap(loader.getResult("shroom3")),
-                    y: 170,
-                    edible: true
-                };
-
-                shrooms = [shroom1, shroom2, shroom3];
+                shrooms = [
+                    {
+                        bitmap: new createjs.Bitmap(loader.getResult("chantarelle")),
+                        y: 347,
+                        edible: true
+                    },
+                    {
+                        bitmap: new createjs.Bitmap(loader.getResult("deathcap")),
+                        y: 353,
+                        edible: false
+                    }
+                ];
 
                 // Set up action board
                 var actionBoardBg = new createjs.Shape();
@@ -116,7 +108,7 @@
                 actionBoard.addChild(actionBoardBg, trashcan, cauldron);
 
                 // Set up basic game
-                stage.addChild(background, stick, pointsLabel, livesLabel);
+                stage.addChild(background, hipster, pointsLabel, livesLabel);
 
                 createjs.Ticker.timingMode = createjs.Ticker.RAF;
                 createjs.Ticker.addEventListener("tick", tick);
