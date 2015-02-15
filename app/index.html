@@ -35,6 +35,7 @@
                     {src: "tree.png", id: "tree"},
                     {src: "mountain-back.png", id: "mountainFar"},
                     {src: "mountain-front.png", id: "mountainNear"},
+                    {src: "basket.png", id: "basket"},
                 ];
 
                 loader.addEventListener("complete", handleComplete); 
@@ -53,13 +54,14 @@
                 background.y = h - backgroundImg.height;
 
                 // Set up stats
-                pointsLabel = new createjs.Text(points, "20px Arial", "#ff7700");
+                pointsLabel = new createjs.Text(points, "Bold 40px Helvetica", "#fff");
                 pointsLabel.x = 20;
-                pointsLabel.y = 20;
+                pointsLabel.y = 428;
 
-                livesLabel = new createjs.Text(lives, "20px Arial", "#ff7700");
-                livesLabel.x = 20;
-                livesLabel.y = 45;
+                livesIcon = new createjs.Bitmap(loader.getResult("basket")).set({x: 820, y: 418});
+                livesLabel = new createjs.Text(lives, "Bold 40px Helvetica", "#fff");
+                livesLabel.x = 790;
+                livesLabel.y = 428;
 
                 // Set up background objects
                 tree = new createjs.Bitmap(loader.getResult("tree"));
@@ -129,7 +131,7 @@
                 actionBoard.addChild(actionTrash, actionEat);
 
                 // Set up basic game
-                stage.addChild(background, mountainFar, mountainNear, tree, hipster, pointsLabel, livesLabel, actionBoard);
+                stage.addChild(background, mountainFar, mountainNear, tree, hipster, pointsLabel, livesIcon, livesLabel, actionBoard);
                 
                 // Add keyboard controls
                 document.onkeypress = keyboardCtrl;
@@ -178,6 +180,8 @@
                     if (shroomTrain[i].bitmap.x < 155) {
                         stage.removeChild(shroomTrain[i].bitmap);
                         shroomTrain.shift();
+                        points -= 10;
+                        pointsLabel.text = points;
                     }
                 }
             }
