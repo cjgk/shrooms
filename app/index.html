@@ -13,7 +13,7 @@
         <script>
             var stage, w, h, loader, rotation;
             var background, tree, mountainNear, mountainFar, hipster;
-            var shrooms, shroom, actionShroom, actionBoard;
+            var shrooms, shroomTrain, actionBoard;
             var points, lives, pointsLabel, livesLabel, speed;
 
             function init() {
@@ -31,7 +31,7 @@
                     {src: "chantarelle.png", id: "chantarelle"},
                     {src: "deathcap.png", id: "deathcap"},
                     {src: "trashcan.png", id: "trashcan"},
-                    {src: "cauldron.png", id: "cauldron"},
+                    {src: "fryingpan.png", id: "fryingpan"},
                     {src: "tree.png", id: "tree"},
                     {src: "mountain-back.png", id: "mountainFar"},
                     {src: "mountain-front.png", id: "mountainNear"},
@@ -87,81 +87,69 @@
                 hipster = new createjs.Sprite(hipsterSpriteSheet, "run");
 
                 // Set up shrooms
+                shroomTrain = [];
                 shrooms = [
                     {
-                        bitmap: new createjs.Bitmap(loader.getResult("chantarelle")),
+                        image: loader.getResult("chantarelle"),
                         y: 347,
                         edible: true
                     },
                     {
-                        bitmap: new createjs.Bitmap(loader.getResult("deathcap")),
+                        image: loader.getResult("deathcap"),
                         y: 353,
                         edible: false
                     }
                 ];
 
                 // Set up action board
-                var actionBoardBg = new createjs.Shape();
-                actionBoardBg.graphics.beginFill("#eee")
-                    .setStrokeStyle(1)
-                    .beginStroke("#000000")
-                    .drawRoundRect(280, 20, 200, 100, 10);
+                var actionEatBg = new createjs.Shape();
+                actionEatBg.graphics.beginFill("#eee")
+                    .drawRoundRect(30, 40, 300, 155, 10);
+                actionEatBg.on("click", eatHandler);
+
+                var fryingpan = new createjs.Bitmap(loader.getResult("fryingpan"));
+                fryingpan.x = 110;
+                fryingpan.y = 70;
+
+                var actionEat = new createjs.Container();
+                actionEat.addChild(actionEatBg, fryingpan);
+
+                var actionTrashBg = actionEatBg.clone();
+                actionTrashBg.x += 530;
+                actionTrashBg.on("click", trashHandler);
 
                 var trashcan = new createjs.Bitmap(loader.getResult("trashcan"));
-                trashcan.x = 410;
-                trashcan.y = 20;
-                trashcan.on("click", trashcanHandler);
+                trashcan.x = 680;
+                trashcan.y = 53;
 
-                var cauldron = new createjs.Bitmap(loader.getResult("cauldron"));
-                cauldron.x = 410;
-                cauldron.y = 50;
-                cauldron.on("click", cauldronHandler);
+                var actionTrash = new createjs.Container();
+                actionTrash.addChild(actionTrashBg, trashcan);
 
                 actionBoard = new createjs.Container();
                 actionBoard.name = "actionBoard";
-                actionBoard.addChild(actionBoardBg, trashcan, cauldron);
+                actionBoard.addChild(actionTrash, actionEat);
 
                 // Set up basic game
-                stage.addChild(background, mountainFar, mountainNear, tree, hipster, pointsLabel, livesLabel);
+                stage.addChild(background, mountainFar, mountainNear, tree, hipster, pointsLabel, livesLabel, actionBoard);
 
                 createjs.Ticker.timingMode = createjs.Ticker.RAF;
                 createjs.Ticker.addEventListener("tick", tick);
-                //tick(tick)
-                //tick(tick)
             }
 
             function tick(event) {
                 var deltaS = event.delta / 1000;
 
+                moveShroomTrain(deltaS);
                 tree.x = tree.x < -100 ? 950 : (tree.x - deltaS * (speed - 50));
 
                 mountainNear.x = mountainNear.x < -400 ? 1600 : (mountainNear.x - deltaS * (speed - 158));
 
-
-                if (shroom != undefined) {
-                    if (shroom.bitmap.x < 155) {
-                        actionShroom = shroom;
-                        //showActionBoard(actionShroom);
-                        stage.removeChild(shroom.bitmap);
-                        shroom = undefined;
-                    } else {
-                        shroom.bitmap.x = (shroom.bitmap.x - deltaS * speed);
-                    }
-
-                    if (stage.getChildByName("actionBoard") && shroom && shroom.bitmap.x < 300) {
-                        hideActionBoard();
-                    }
-                }
-
                 if (rotation % 400 == 0) {
-                    randShroom = Math.floor(Math.random() * shrooms.length);
-                    shroom = shrooms[randShroom];
-                    addShroom(shroom);
+                    addShroom();
                 }
 
                 if (rotation % 1000 == 0) {
                     speed += 10;
-                    hipster.spriteSheet.framerate++;
                 }
 
                 if (lives == 0) {
@@ -171,35 +159,37 @@
                 rotation = rotation + 1;
                 if (!event.paused) {
                     stage.update(event);
-                } else {
                 }
             }
 
-            function showActionBoard (actionShroom) {
-                actionBitmap = actionShroom.bitmap.clone();
-                actionBitmap.name = "actionShroom";
-                actionBitmap.x = 300;
-                actionBitmap.y = 40;
-                actionBoard.addChild(actionBitmap);
-
-                stage.addChild(actionBoard);
+            function moveShroomTrain (deltaS) {
+                for (i = 0; i < shroomTrain.length; i++) {
+                    shroomTrain[i].bitmap.x -= deltaS * speed;
+                    if (shroomTrain[i].bitmap.x < 155) {
+                        stage.removeChild(shroomTrain[i].bitmap);
+                        shroomTrain.shift();
+                    }
+                }
             }
 
-            function hideActionBoard () {
-                var actionShroom = actionBoard.getChildByName("actionShroom");
-                actionBoard.removeChild(actionShroom, actionBoard);
-                stage.removeChild(actionBoard);
+            function addShroom () {
+                var randShroom = Math.floor(Math.random() * shrooms.length);
+                var shroom = shrooms[randShroom];
+                var newShroom = {
+                    bitmap: new createjs.Bitmap(shroom.image)
+                        .set({
+                            x: 500, 
+                            y: shroom.y
+                        }),
+                    edible: shroom.edible
+                }
+
+                shroomTrain.push(newShroom);
+                stage.addChild(shroomTrain[shroomTrain.length - 1].bitmap);
 
             }
-            
-            function addShroom (shroom) {
-                shroom.bitmap.x = 950;
-                shroom.bitmap.y = shroom.y;
-                stage.addChild(shroom.bitmap);
-            }
 
-            function cauldronHandler(evt, data) {
-                hideActionBoard();
+            function eatHandler(evt, data) {
                 if (actionShroom.edible) {
                     points = points + 10;
                 } else {
@@ -210,8 +200,7 @@
                 livesLabel.text = lives;
             }
 
-            function trashcanHandler(evt, data) {
-                hideActionBoard();
+            function trashHandler(evt, data) {
                 if (actionShroom.edible) {
                     points = points - 5;
                 } else {
