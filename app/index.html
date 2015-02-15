@@ -91,12 +91,10 @@
                 shrooms = [
                     {
                         image: loader.getResult("chantarelle"),
-                        y: 347,
                         edible: true
                     },
                     {
                         image: loader.getResult("deathcap"),
-                        y: 353,
                         edible: false
                     }
                 ];
@@ -179,7 +177,7 @@
                     bitmap: new createjs.Bitmap(shroom.image)
                         .set({
                             x: 950, 
-                            y: shroom.y
+                            y: 347
                         }),
                     edible: shroom.edible
                 }
