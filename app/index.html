@@ -144,7 +144,7 @@
 
                 mountainNear.x = mountainNear.x < -400 ? 1600 : (mountainNear.x - deltaS * (speed - 158));
 
-                if (rotation % 400 == 0) {
+                if (rotation % 30 == 0) {
                     addShroom();
                 }
 
@@ -178,7 +178,7 @@
                 var newShroom = {
                     bitmap: new createjs.Bitmap(shroom.image)
                         .set({
-                            x: 500, 
+                            x: 950, 
                             y: shroom.y
                         }),
                     edible: shroom.edible
@@ -190,24 +190,39 @@
             }
 
             function eatHandler(evt, data) {
-                if (actionShroom.edible) {
-                    points = points + 10;
-                } else {
-                    lives = lives - 1;
+                actionHandler('eat');
+            }
+
+            function trashHandler(evt, data) {
+                actionHandler('trash');
+            }
+
+            function actionHandler(action) {
+                if (shroomTrain.length == 0) {
+                    return false;
+                }
+
+                var shroom = shroomTrain.shift();
+                stage.removeChild(shroom.bitmap);
+
+                if (action == 'eat') {
+                    if (shroom.edible) {
+                        points += 10;
+                    } else {
+                        lives -= 1;
+                    }
+                }
+
+                if (action == 'trash') {
+                    if (shroom.edible) {
+                        points -= 10;
+                    } else {
+                        points += 5;
+                    }
                 }
 
                 pointsLabel.text = points;
                 livesLabel.text = lives;
-            }
-
-            function trashHandler(evt, data) {
-                if (actionShroom.edible) {
-                    points = points - 5;
-                } else {
-                    points = points + 5;
-                }
-
-                pointsLabel.text = points;
             }
         </script>
     </body>
