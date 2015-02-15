@@ -103,6 +103,7 @@
                 var actionEatBg = new createjs.Shape();
                 actionEatBg.graphics.beginFill("#eee")
                     .drawRoundRect(30, 40, 300, 155, 10);
+                actionEatBg.alpha = 0.5;
                 actionEatBg.on("click", eatHandler);
 
                 var fryingpan = new createjs.Bitmap(loader.getResult("fryingpan"));
@@ -129,6 +130,9 @@
 
                 // Set up basic game
                 stage.addChild(background, mountainFar, mountainNear, tree, hipster, pointsLabel, livesLabel, actionBoard);
+                
+                // Add keyboard controls
+                document.onkeypress = keyboardCtrl;
 
                 createjs.Ticker.timingMode = createjs.Ticker.RAF;
                 createjs.Ticker.addEventListener("tick", tick);
@@ -138,9 +142,9 @@
                 var deltaS = event.delta / 1000;
 
                 moveShroomTrain(deltaS);
-                tree.x = tree.x < -100 ? 950 : (tree.x - deltaS * (speed - 50));
+                tree.x = tree.x < -100 ? 950 : (tree.x - 0.2);
 
-                mountainNear.x = mountainNear.x < -400 ? 1600 : (mountainNear.x - deltaS * (speed - 158));
+                mountainNear.x = mountainNear.x < -400 ? 1600 : (mountainNear.x - .1);
 
                 if (rotation % 30 == 0) {
                     addShroom();
@@ -157,6 +161,14 @@
                 rotation = rotation + 1;
                 if (!event.paused) {
                     stage.update(event);
+                }
+            }
+
+            function keyboardCtrl(event) {
+                if (event.charCode == 122) {
+                    eatHandler();
+                } else if (event.charCode == 120) {
+                    trashHandler();
                 }
             }
 
